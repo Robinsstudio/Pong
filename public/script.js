@@ -37,12 +37,11 @@ addEventListener('keydown', event => socket.emit('keydown', event.key));
 addEventListener('keyup', event => socket.emit('keyup', event.key));
 
 socket.on('refresh', event => {
-	console.log(event.player.x, event.player.y)
-
 	context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 	context.fillStyle = '#000000';
 	context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
 	drawBall(event.ball);
-	drawPlayer(event.player);
+	drawPlayer(event.leftPlayer);
+	drawPlayer(event.rightPlayer);
 });
