@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -8,7 +8,7 @@ app.use(express.static('public'));
 const Constants = require('./Constants');
 const Scene = require('./Scene');
 
-let scene = null;
+let scene = new Scene();
 let peopleConnected = 0;
 
 function initLeftPlayer(socket) {
@@ -43,20 +43,24 @@ function initRightPlayer(socket) {
 	});
 }
 
-function initScene() {
-	scene = new Scene();
+function startGame() {
 	setInterval(() => {
 		io.emit('refresh', scene.calculate());
 	}, 1000 / 60);
+
+	scene.onScoreChange(score => io.emit('score', score));
 }
 
 io.on('connection', socket => {
 	if (peopleConnected == 0) {
-		initScene();
 		initLeftPlayer(socket);
 	} else if (peopleConnected == 1) {
 		initRightPlayer(socket);
+		startGame();
 	}
+
+	socket.emit('constants', Constants);
+
 	peopleConnected++;
 });
 

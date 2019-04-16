@@ -2,11 +2,27 @@ const Constants = require('./Constants');
 const Intervals = require('./Intervals');
 
 class Ball {
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
-		this.speedX = Constants.BALL_SPEED_X;
-		this.speedY = Constants.BALL_SPEED_Y;
+	constructor() {
+		this.reset();
+	}
+
+	center() {
+		this.x = Constants.CANVAS_WIDTH / 2 - Constants.BALL_RADIUS;
+		this.y = Constants.CANVAS_HEIGHT / 2 - Constants.BALL_RADIUS;
+	}
+
+	random() {
+		return Constants.BALL_SPEED / 4 + Math.random() * Constants.BALL_SPEED / 2;
+	}
+
+	randomizeSpeed() {
+		this.speedX = this.random();
+		this.speedY = this.random();
+	}
+
+	reset() {
+		this.center();
+		this.randomizeSpeed();
 	}
 
 	intersectX(player) {
@@ -44,8 +60,17 @@ class Ball {
 		this.x = Math.max(Math.min(this.x + this.speedX, Constants.CANVAS_WIDTH - Constants.BALL_RADIUS), Constants.BALL_RADIUS);
 		this.y = Math.max(Math.min(this.y + this.speedY, Constants.CANVAS_HEIGHT - Constants.BALL_RADIUS), Constants.BALL_RADIUS);
 
-		if (this.x - Constants.BALL_RADIUS <= 0 || this.x + Constants.BALL_RADIUS >= Constants.CANVAS_WIDTH) {
-			this.speedX *= -1;
+		this.speedX += Math.sign(this.speedX) * 0.01;
+		this.speedY += Math.sign(this.speedX) * 0.01;
+
+		if (this.x - Constants.BALL_RADIUS <= 0) {
+			this.fireOnOutOfBounds('Left');
+			this.reset();
+		}
+
+		if (this.x + Constants.BALL_RADIUS >= Constants.CANVAS_WIDTH) {
+			this.fireOnOutOfBounds('Right');
+			this.reset();
 		}
 
 		if (this.y - Constants.BALL_RADIUS <= 0 || this.y + Constants.BALL_RADIUS >= Constants.CANVAS_HEIGHT) {
@@ -53,6 +78,14 @@ class Ball {
 		}
 
 		return { x: this.x, y: this.y };
+	}
+
+	fireOnOutOfBounds(side) {
+		this.onOutOfBoundsCallback(side);
+	}
+
+	onOutOfBounds(callback) {
+		this.onOutOfBoundsCallback = callback;
 	}
 }
 

@@ -1,27 +1,21 @@
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
-
-const BALL_RADIUS = 20;
-const BALL_SPEED_X = Math.random() * 5;
-const BALL_SPEED_Y = Math.random() * 5;
-
-const PLAYER_SIZE_X = 10;
-const PLAYER_SIZE_Y = 150;
-const PLAYER_SPEED_X = 10;
-const PLAYER_SPEED_Y = 10;
-
 const socket = io();
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
 
-canvas.width = CANVAS_WIDTH;
-canvas.height = CANVAS_HEIGHT;
+let constants = {};
+let score = { leftPlayer: 0, rightPlayer: 0 };
+
+function clearCanvas() {
+	context.clearRect(0, 0, constants.CANVAS_WIDTH, constants.CANVAS_HEIGHT);
+	context.fillStyle = '#000000';
+	context.fillRect(0, 0, constants.CANVAS_WIDTH, constants.CANVAS_HEIGHT);
+}
 
 function drawBall(ball) {
 	context.beginPath();
 	
-	context.arc(ball.x, ball.y, BALL_RADIUS, 0 * Math.PI, 2 * Math.PI);
+	context.arc(ball.x, ball.y, constants.BALL_RADIUS, 0 * Math.PI, 2 * Math.PI);
 	context.fillStyle = '#77ABFF';
 	context.fill();
 	
@@ -30,18 +24,45 @@ function drawBall(ball) {
 
 function drawPlayer(player) {
 	context.fillStyle = '#FFFFFF';
-	context.fillRect(player.x, player.y, PLAYER_SIZE_X, PLAYER_SIZE_Y);
+	context.fillRect(player.x, player.y, constants.PLAYER_SIZE_X, constants.PLAYER_SIZE_Y);
+}
+
+function drawScore() {
+	context.font = '30px Arial';
+	context.textAlign = 'center';
+	context.textBaseline = 'top';
+	context.fillStyle = '#FFFFFF';
+	context.fillText(`${score.leftPlayer} - ${score.rightPlayer}`, canvas.width / 2, 10);
+}
+
+function drawWaitingText() {
+	context.font = '50px Arial';
+	context.textAlign = 'center';
+	context.textBaseline = 'middle';
+	context.fillStyle = '#FFFFFF';
+	context.fillText('Waiting for your opponent...', canvas.width / 2, canvas.height / 2);
 }
 
 addEventListener('keydown', event => socket.emit('keydown', event.key));
 addEventListener('keyup', event => socket.emit('keyup', event.key));
 
 socket.on('refresh', event => {
-	context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-	context.fillStyle = '#000000';
-	context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+	clearCanvas();
+
+	drawScore();
 
 	drawBall(event.ball);
 	drawPlayer(event.leftPlayer);
 	drawPlayer(event.rightPlayer);
 });
+
+socket.on('constants', consts => {
+	constants = consts;
+	canvas.width = constants.CANVAS_WIDTH;
+	canvas.height = constants.CANVAS_HEIGHT;
+
+	clearCanvas();
+	drawWaitingText();
+});
+
+socket.on('score', sc => score = sc);
