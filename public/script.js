@@ -36,11 +36,23 @@ function drawScore() {
 }
 
 function drawWaitingText() {
+	clearCanvas();
+
 	context.font = '50px Arial';
 	context.textAlign = 'center';
 	context.textBaseline = 'middle';
 	context.fillStyle = '#FFFFFF';
 	context.fillText('Waiting for your opponent...', canvas.width / 2, canvas.height / 2);
+}
+
+function drawCountdown(text) {
+	clearCanvas();
+
+	context.font = '100px Arial';
+	context.textAlign = 'center';
+	context.textBaseline = 'middle';
+	context.fillStyle = '#FFFFFF';
+	context.fillText(text, canvas.width / 2, canvas.height / 2);
 }
 
 addEventListener('keydown', event => socket.emit('keydown', event.key));
@@ -61,8 +73,11 @@ socket.on('constants', consts => {
 	canvas.width = constants.CANVAS_WIDTH;
 	canvas.height = constants.CANVAS_HEIGHT;
 
-	clearCanvas();
 	drawWaitingText();
 });
 
 socket.on('score', sc => score = sc);
+
+socket.on('countdown', drawCountdown);
+
+socket.on('waiting', drawWaitingText);

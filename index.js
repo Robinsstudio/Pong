@@ -35,6 +35,7 @@ function initLeftPlayer(socket) {
 
 		socket.on('disconnect', () => {
 			players = players.filter(({side}) => side !== Constants.LEFT);
+			stopGame();
 		});
 
 		return true;
@@ -64,6 +65,7 @@ function initRightPlayer(socket) {
 
 		socket.on('disconnect', () => {
 			players = players.filter(({side}) => side !== Constants.RIGHT);
+			stopGame();
 		});
 
 		return true;
@@ -72,17 +74,30 @@ function initRightPlayer(socket) {
 	return false;
 }
 
-function startGame() {
+function stopGame() {
 	if (interval) {
 		clearInterval(interval);
+		io.emit('waiting');
 	}
+}
+
+function startGame() {
+	stopGame();
 
 	scene.reset();
 	scene.fireOnScoreChange();
 
-	interval = setInterval(() => {
-		io.emit('refresh', scene.calculate());
-	}, 1000 / 60);
+	const length = Constants.COUNTDOWN + 1;
+
+	Array.from({ length }, (_, i) => setTimeout(() => {
+		io.emit('countdown', (i !== length - 1) ? Constants.COUNTDOWN - i : 'GO!');
+	}, i * Constants.MILLIS_PER_SECOND));
+
+	setTimeout(() => {
+		interval = setInterval(() => {
+			io.emit('refresh', scene.calculate());
+		}, Constants.MILLIS_PER_SECOND / Constants.FRAMES_PER_SECOND);
+	}, length * Constants.MILLIS_PER_SECOND);
 }
 
 io.on('connection', socket => {
