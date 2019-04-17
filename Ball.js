@@ -60,22 +60,22 @@ class Ball {
 		this.x = Math.max(Math.min(this.x + this.speedX, Constants.CANVAS_WIDTH - Constants.BALL_RADIUS), Constants.BALL_RADIUS);
 		this.y = Math.max(Math.min(this.y + this.speedY, Constants.CANVAS_HEIGHT - Constants.BALL_RADIUS), Constants.BALL_RADIUS);
 
-		this.speedX += Math.sign(this.speedX) * 0.01;
-		this.speedY += Math.sign(this.speedX) * 0.01;
-
 		if (this.x - Constants.BALL_RADIUS <= 0) {
-			this.fireOnOutOfBounds('Left');
+			this.fireOnOutOfBounds(Constants.LEFT);
 			this.reset();
 		}
 
 		if (this.x + Constants.BALL_RADIUS >= Constants.CANVAS_WIDTH) {
-			this.fireOnOutOfBounds('Right');
+			this.fireOnOutOfBounds(Constants.RIGHT);
 			this.reset();
 		}
 
 		if (this.y - Constants.BALL_RADIUS <= 0 || this.y + Constants.BALL_RADIUS >= Constants.CANVAS_HEIGHT) {
 			this.speedY *= -1;
 		}
+
+		this.speedX += Math.sign(this.speedX) * Constants.BALL_ACCELERATION;
+		this.speedY += Math.sign(this.speedY) * Constants.BALL_ACCELERATION;
 
 		return { x: this.x, y: this.y };
 	}

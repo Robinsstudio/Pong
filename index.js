@@ -8,60 +8,92 @@ app.use(express.static('public'));
 const Constants = require('./Constants');
 const Scene = require('./Scene');
 
-let scene = new Scene();
-let peopleConnected = 0;
+const scene = new Scene();
+scene.onScoreChange(score => io.emit('score', score));
+
+let players = [];
+let interval = null;
 
 function initLeftPlayer(socket) {
-	socket.on('keydown', key => {
-		if (key === 'ArrowDown') {
-			scene.setLeftPlayerSpeedY(Constants.PLAYER_SPEED_Y);
-		} else if (key === 'ArrowUp') {
-			scene.setLeftPlayerSpeedY(-Constants.PLAYER_SPEED_Y);
-		}
-	});
+	if (!players.some(player => player.socket === socket || player.side === Constants.LEFT)) {
 
-	socket.on('keyup', key => {
-		if (key === 'ArrowDown' || key === 'ArrowUp') {
-			scene.setLeftPlayerSpeedY(0);
-		}
-	});
+		players = players.concat({ socket, side: Constants.LEFT });
+
+		socket.on('keydown', key => {
+			if (key === 'ArrowDown') {
+				scene.setLeftPlayerSpeedY(Constants.PLAYER_SPEED_Y);
+			} else if (key === 'ArrowUp') {
+				scene.setLeftPlayerSpeedY(-Constants.PLAYER_SPEED_Y);
+			}
+		});
+
+		socket.on('keyup', key => {
+			if (key === 'ArrowDown' || key === 'ArrowUp') {
+				scene.setLeftPlayerSpeedY(0);
+			}
+		});
+
+		socket.on('disconnect', () => {
+			players = players.filter(({side}) => side !== Constants.LEFT);
+		});
+
+		return true;
+	}
+
+	return false;
 }
 
 function initRightPlayer(socket) {
-	socket.on('keydown', key => {
-		if (key === 'ArrowDown') {
-			scene.setRightPlayerSpeedY(Constants.PLAYER_SPEED_Y);
-		} else if (key === 'ArrowUp') {
-			scene.setRightPlayerSpeedY(-Constants.PLAYER_SPEED_Y);
-		}
-	});
+	if (!players.some(player => player.socket === socket || player.side === Constants.RIGHT)) {
 
-	socket.on('keyup', key => {
-		if (key === 'ArrowDown' || key === 'ArrowUp') {
-			scene.setRightPlayerSpeedY(0);
-		}
-	});
+		players = players.concat({ socket, side: Constants.RIGHT });
+
+		socket.on('keydown', key => {
+			if (key === 'ArrowDown') {
+				scene.setRightPlayerSpeedY(Constants.PLAYER_SPEED_Y);
+			} else if (key === 'ArrowUp') {
+				scene.setRightPlayerSpeedY(-Constants.PLAYER_SPEED_Y);
+			}
+		});
+
+		socket.on('keyup', key => {
+			if (key === 'ArrowDown' || key === 'ArrowUp') {
+				scene.setRightPlayerSpeedY(0);
+			}
+		});
+
+		socket.on('disconnect', () => {
+			players = players.filter(({side}) => side !== Constants.RIGHT);
+		});
+
+		return true;
+	}
+
+	return false;
 }
 
 function startGame() {
-	setInterval(() => {
+	if (interval) {
+		clearInterval(interval);
+	}
+
+	scene.reset();
+	scene.fireOnScoreChange();
+
+	interval = setInterval(() => {
 		io.emit('refresh', scene.calculate());
 	}, 1000 / 60);
-
-	scene.onScoreChange(score => io.emit('score', score));
 }
 
 io.on('connection', socket => {
-	if (peopleConnected == 0) {
-		initLeftPlayer(socket);
-	} else if (peopleConnected == 1) {
-		initRightPlayer(socket);
+	const leftPlayerJoined = initLeftPlayer(socket);
+	const rightPlayerJoined = initRightPlayer(socket);
+
+	if (players.length == 2 && (leftPlayerJoined || rightPlayerJoined)) {
 		startGame();
 	}
 
 	socket.emit('constants', Constants);
-
-	peopleConnected++;
 });
 
 http.listen(3000);

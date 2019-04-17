@@ -3,16 +3,16 @@ const Ball = require('./Ball');
 const Player = require('./Player');
 
 class Scene {
-	constructor() {
+	reset() {
 		this.ball = new Ball();
 		this.leftPlayer = new Player(.125 * Constants.CANVAS_WIDTH - .5 * Constants.PLAYER_SIZE_X, .5 * Constants.CANVAS_HEIGHT - .5 * Constants.PLAYER_SIZE_Y);
 		this.rightPlayer = new Player(.875 * Constants.CANVAS_WIDTH - .5 * Constants.PLAYER_SIZE_X, .5 * Constants.CANVAS_HEIGHT - .5 * Constants.PLAYER_SIZE_Y);
 		this.score = { leftPlayer: 0, rightPlayer: 0 };
 
 		this.ball.onOutOfBounds(side => {
-			if (side === 'Left') {
+			if (side === Constants.LEFT) {
 				this.incrementScore({ leftPlayer: 0, rightPlayer: 1 });
-			} else if (side === 'Right') {
+			} else if (side === Constants.RIGHT) {
 				this.incrementScore({ leftPlayer: 1, rightPlayer: 0 });
 			}
 		});
