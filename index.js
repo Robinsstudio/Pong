@@ -7,7 +7,9 @@ app.use(express.static('public'));
 
 const Constants = require('./Constants');
 const Scene = require('./Scene');
+const RunnableQueue = require('./RunnableQueue');
 
+const queue = new RunnableQueue();
 const scene = new Scene();
 scene.onScoreChange(score => io.emit('score', score));
 
@@ -75,10 +77,9 @@ function initRightPlayer(socket) {
 }
 
 function stopGame() {
-	if (interval) {
-		clearInterval(interval);
-		io.emit('waiting');
-	}
+	queue.clear();
+	clearInterval(interval);
+	io.emit('waiting');
 }
 
 function startGame() {
@@ -89,15 +90,19 @@ function startGame() {
 
 	const length = Constants.COUNTDOWN + 1;
 
-	Array.from({ length }, (_, i) => setTimeout(() => {
-		io.emit('countdown', (i !== length - 1) ? Constants.COUNTDOWN - i : 'GO!');
-	}, i * Constants.MILLIS_PER_SECOND));
+	Array.from({ length }, (_, i) => {
+		queue.nextRun(() => {
+			io.emit('countdown', (i !== length - 1) ? Constants.COUNTDOWN - i : 'GO!');
+		}, i === 0 ? 0 : Constants.MILLIS_PER_SECOND);
+	});
 
-	setTimeout(() => {
+	queue.nextRun(() => {
 		interval = setInterval(() => {
 			io.emit('refresh', scene.calculate());
 		}, Constants.MILLIS_PER_SECOND / Constants.FRAMES_PER_SECOND);
-	}, length * Constants.MILLIS_PER_SECOND);
+	}, Constants.MILLIS_PER_SECOND);
+
+	queue.start();
 }
 
 io.on('connection', socket => {
