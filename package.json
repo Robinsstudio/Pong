@@ -4,12 +4,17 @@
   "description": "A simple Socket.IO pong game",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpileOnly index.ts"
   },
   "author": "Robinsstudio",
   "license": "MIT",
   "dependencies": {
+    "@types/express": "^4.16.1",
+    "@types/node": "^11.13.5",
+    "@types/socket.io": "^2.1.2",
     "express": "^4.16.4",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.2.0",
+    "typescript": "^3.4.3"
   }
 }

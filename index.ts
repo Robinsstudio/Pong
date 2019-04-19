@@ -1,25 +1,32 @@
-const express = require('express');
-const app = express();
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+import express from 'express';
+import http from 'http';
+import socketIO from 'socket.io';
+
+import Constants from './Constants';
+import Side from './Side';
+import Scene from './Scene';
+import RunnableQueue from './RunnableQueue';
+
+import Player from './Player';
+
+const app: express.Application = express();
+const server: http.Server = new http.Server(app);
+const io: socketIO.Server = socketIO(server);
+
+const queue: RunnableQueue = new RunnableQueue();
+const scene: Scene = new Scene();
 
 app.use(express.static('public'));
 
-const Constants = require('./Constants');
-const Scene = require('./Scene');
-const RunnableQueue = require('./RunnableQueue');
-
-const queue = new RunnableQueue();
-const scene = new Scene();
 scene.onScoreChange(score => io.emit('score', score));
 
-let players = [];
-let interval = null;
+let players: Array<Player> = [];
+let interval: NodeJS.Timeout;
 
-function initLeftPlayer(socket) {
-	if (!players.some(player => player.socket === socket || player.side === Constants.LEFT)) {
+function initLeftPlayer(socket: socketIO.Socket) {
+	if (!players.some(player => player.socket === socket || player.side === Side.LEFT)) {
 
-		players = players.concat({ socket, side: Constants.LEFT });
+		players = players.concat({ socket, side: Side.LEFT });
 
 		socket.on('keydown', key => {
 			if (key === 'ArrowDown') {
@@ -36,7 +43,7 @@ function initLeftPlayer(socket) {
 		});
 
 		socket.on('disconnect', () => {
-			players = players.filter(({side}) => side !== Constants.LEFT);
+			players = players.filter(({side}) => side !== Side.LEFT);
 			stopGame();
 		});
 
@@ -46,10 +53,10 @@ function initLeftPlayer(socket) {
 	return false;
 }
 
-function initRightPlayer(socket) {
-	if (!players.some(player => player.socket === socket || player.side === Constants.RIGHT)) {
+function initRightPlayer(socket: socketIO.Socket) {
+	if (!players.some(player => player.socket === socket || player.side === Side.RIGHT)) {
 
-		players = players.concat({ socket, side: Constants.RIGHT });
+		players = players.concat({ socket, side: Side.RIGHT });
 
 		socket.on('keydown', key => {
 			if (key === 'ArrowDown') {
@@ -66,7 +73,7 @@ function initRightPlayer(socket) {
 		});
 
 		socket.on('disconnect', () => {
-			players = players.filter(({side}) => side !== Constants.RIGHT);
+			players = players.filter(({side}) => side !== Side.RIGHT);
 			stopGame();
 		});
 
@@ -83,18 +90,16 @@ function stopGame() {
 }
 
 function startGame() {
-	stopGame();
-
 	scene.reset();
 	scene.fireOnScoreChange();
 
 	const length = Constants.COUNTDOWN + 1;
 
-	Array.from({ length }, (_, i) => {
+	for (let i = 0; i < length; i++) {
 		queue.nextRun(() => {
 			io.emit('countdown', (i !== length - 1) ? Constants.COUNTDOWN - i : 'GO!');
 		}, i === 0 ? 0 : Constants.MILLIS_PER_SECOND);
-	});
+	}
 
 	queue.nextRun(() => {
 		interval = setInterval(() => {
@@ -116,4 +121,4 @@ io.on('connection', socket => {
 	socket.emit('constants', Constants);
 });
 
-http.listen(3000);
+server.listen(3000);

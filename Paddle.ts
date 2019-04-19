@@ -1,18 +1,27 @@
-const Constants = require('./Constants');
+import Constants from './Constants';
 
-class Player {
-	constructor(x, y) {
+class Paddle {
+	x: number;
+	y: number;
+	prevX: number;
+	prevY: number;
+	speedX: number;
+	speedY: number;
+
+	constructor(x: number, y: number) {
 		this.x = x;
 		this.y = y;
+		this.prevX = x;
+		this.prevY = y;
 		this.speedX = 0;
 		this.speedY = 0;
 	}
 
-	setSpeedX(speedX) {
+	setSpeedX(speedX: number) {
 		this.speedX = speedX;
 	}
 
-	setSpeedY(speedY) {
+	setSpeedY(speedY: number) {
 		this.speedY = speedY;
 	}
 
@@ -27,4 +36,4 @@ class Player {
 	}
 }
 
-module.exports = Player;
+export default Paddle;
