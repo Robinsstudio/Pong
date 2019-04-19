@@ -1,4 +1,17 @@
+class Runnable {
+	callback: Function;
+	millis: number;
+
+	constructor(callback: Function, millis: number) {
+		this.callback = callback;
+		this.millis = millis;
+	}
+}
+
 class RunnableQueue {
+	runnables: Array<Runnable>;
+	timeouts: Array<NodeJS.Timeout>;
+
 	constructor() {
 		this.runnables = [];
 		this.timeouts = [];
@@ -6,7 +19,7 @@ class RunnableQueue {
 		this.clear = this.clear.bind(this);
 	}
 
-	nextRun(callback, millis = 0) {
+	nextRun(callback: Function, millis = 0) {
 		this.runnables.push({ callback, millis });
 	}
 
@@ -25,4 +38,4 @@ class RunnableQueue {
 	}
 }
 
-module.exports = RunnableQueue;
+export default RunnableQueue;
